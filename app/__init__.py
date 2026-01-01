@@ -59,6 +59,7 @@ def create_app():
     from .presentation.admin.damage_claims import damage_claims_bp
     from .presentation.admin.bookings import bookings_bp
     from .presentation.admin.keyless import keyless_bp
+    from .presentation.admin.db_init import db_init_bp
 
     app.register_blueprint(login_bp)
     app.register_blueprint(logout_bp)
@@ -69,6 +70,9 @@ def create_app():
     app.register_blueprint(damage_claims_bp)
     app.register_blueprint(bookings_bp)
     app.register_blueprint(keyless_bp)
+
+    # Internal admin-only helper to initialize DB (disabled by default)
+    app.register_blueprint(db_init_bp)
     
     # Register API Blueprints
     from .api.v1.cars import api_cars_bp
