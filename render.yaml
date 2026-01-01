@@ -19,17 +19,3 @@ databases:
   - name: car-rental-db
     databaseName: car_rental
     user: car_rental_user
-
-# One-off job to initialize and seed the database. Run manually from
-# the Render dashboard under "Jobs" after the database and service are provisioned.
-jobs:
-  - name: db-init
-    type: job
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python init_db.py && python seed_data.py
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: car-rental-db
-          property: connectionString
