@@ -35,19 +35,79 @@ def create_app():
     def load_user(user_id):
         return Admin.query.get(int(user_id))
     
-    # Create tables only in development or when explicitly requested
-    init_db_flag = os.environ.get('INIT_DB', 'false').lower() == 'true'
-    if app.config.get('DEBUG') or init_db_flag:
-        with app.app_context():
-            db.create_all()
-            
-            # Create default admin if not exists
-            if not Admin.query.filter_by(username='admin').first():
-                admin = Admin(username='admin', email='admin@carrental.com')
-                admin.set_password('admin')
-                db.session.add(admin)
-                db.session.commit()
-                print("Default admin created: username='admin', password='admin'")
+    # Automatic DB initialization on first deployment (Postgres only)
+    # - Only runs when a DATABASE_URL (Postgres) is configured
+    # - Uses an advisory lock to prevent race conditions across workers
+    # - Idempotent: only creates tables and seeds if no admin/cars exist
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
+    init_db_done = False
+
+    if db_uri and db_uri.startswith('postgresql://'):
+        try:
+            from sqlalchemy import text
+
+            engine = db.get_engine(app)
+            with app.app_context():
+                # Quick check: if admin exists, assume DB is initialized
+                if Admin.query.first():
+                    init_db_done = True
+                else:
+                    # Acquire advisory lock to ensure only one process runs initialization
+                    lock_key = 987654321
+                    with engine.connect() as conn:
+                        try:
+                            got_lock = conn.execute(text(f"SELECT pg_try_advisory_lock({lock_key})")).scalar()
+                        except Exception:
+                            got_lock = False
+
+                        if got_lock:
+                            # Create tables
+                            db.create_all()
+
+                            # Create default admin if not exists
+                            if not Admin.query.filter_by(username='admin').first():
+                                admin = Admin(username='admin', email='admin@carrental.com')
+                                admin.set_password('admin')
+                                db.session.add(admin)
+                                db.session.commit()
+                                app.logger.info("Default admin created: username='admin', password='admin'")
+
+                            # Seed data only if no cars exist
+                            from app.models import Car
+                            if Car.query.count() == 0:
+                                try:
+                                    from seed_data import seed_database as _seed_database
+                                    _seed_database()
+                                    app.logger.info('Database seeded successfully during startup')
+                                except Exception as e:
+                                    app.logger.exception('Seeding failed during startup')
+
+                            # Release advisory lock
+                            try:
+                                conn.execute(text(f"SELECT pg_advisory_unlock({lock_key})"))
+                            except Exception:
+                                pass
+
+                            init_db_done = True
+                        else:
+                            app.logger.info('Another process is initializing the DB; skipping init in this worker')
+        except Exception:
+            app.logger.exception('Automatic DB initialization failed; skipping')
+
+    # Fallback behavior for development or explicit flag
+    if not init_db_done:
+        init_db_flag = os.environ.get('INIT_DB', 'false').lower() == 'true'
+        if app.config.get('DEBUG') or init_db_flag:
+            with app.app_context():
+                db.create_all()
+
+                # Create default admin if not exists
+                if not Admin.query.filter_by(username='admin').first():
+                    admin = Admin(username='admin', email='admin@carrental.com')
+                    admin.set_password('admin')
+                    db.session.add(admin)
+                    db.session.commit()
+                    print("Default admin created: username='admin', password='admin'")
 
     # Register Blueprints - Web UI (Admin Only)
     from .presentation.auth.login import login_bp
