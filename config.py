@@ -13,10 +13,14 @@ class Config:
     # Use PostgreSQL on Render.com (production), SQLite locally (development)
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
-    # Render provides postgres:// but SQLAlchemy 1.4+ needs postgresql://
-    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
-        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-    
+    # Render provides postgres:// — prefer psycopg3 driver for newer Python versions
+    # Convert scheme and ensure SQLAlchemy uses psycopg3 (postgresql+psycopg://)
+    if DATABASE_URL:
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
+        elif DATABASE_URL.startswith('postgresql://'):
+            DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+
     SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///' + os.path.join(basedir, 'database', 'car_rental.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
