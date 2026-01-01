@@ -27,7 +27,8 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     
     # Flask configuration
-    DEBUG = os.environ.get('FLASK_ENV') != 'production'
+    # Safer default: only enable DEBUG when FLASK_ENV is explicitly set to 'development'
+    DEBUG = os.environ.get('FLASK_ENV', '').lower() == 'development'
     
     # Geofencing settings (in kilometers)
     MAX_ALLOWED_DISTANCE = 50  # km from rental location
