@@ -22,19 +22,10 @@ class Config:
         elif DATABASE_URL.startswith('postgresql://'):
             DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+pg8000://', 1)
 
-        # Convert common query params: translate sslmode -> ssl for pg8000 compatibility
-        try:
-            from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
-            parsed = urlparse(DATABASE_URL)
-            qs = dict(parse_qsl(parsed.query))
-            if 'sslmode' in qs:
-                val = qs.pop('sslmode').lower()
-                qs['ssl'] = 'true' if val in ('require', 'verify-full', 'verify-ca') else 'false'
-                new_query = urlencode(qs)
-                DATABASE_URL = urlunparse(parsed._replace(query=new_query))
-        except Exception:
-            # If parsing fails, leave DATABASE_URL as-is and let the driver attempt connection
-            pass
+        # Leave SSL query params (e.g., sslmode=require) unchanged — the pg8000 dialect
+        # handles SSL options in its own way. If the DB provider requires SSL, include
+        # the appropriate parameters (e.g., ?sslmode=require) in the supplied DATABASE_URL.
+        pass
 
     SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'sqlite:///' + os.path.join(basedir, 'database', 'car_rental.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
