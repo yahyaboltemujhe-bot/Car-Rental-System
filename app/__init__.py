@@ -13,6 +13,18 @@ def create_app():
     
     # Load configuration
     app.config.from_object('config.Config')
+
+    # Safety check: in production, ensure a real DATABASE_URL is provided (no SQLite fallback)
+    if not app.config.get('DEBUG'):
+        uri = app.config.get('SQLALCHEMY_DATABASE_URI', '') or ''
+        if uri.startswith('sqlite:///') or not uri:
+            msg = (
+                "Missing or invalid DATABASE_URL in production. "
+                "Set DATABASE_URL to your Postgres connection string in Render environment variables."
+            )
+            # Log and abort startup so the issue is visible in deploy logs
+            app.logger.error(msg)
+            raise RuntimeError(msg)
     
     # Enable CORS for API endpoints
     CORS(app, resources={r"/api/*": {"origins": "*"}})
