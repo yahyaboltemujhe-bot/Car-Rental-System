@@ -1,0 +1,406 @@
+{% extends 'base_enhanced.html' %}
+
+{% block title %}Dashboard - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="sidebar-brand px-3 py-3 mb-3">
+                    <h4>
+                        <i class="bi bi-car-front-fill me-2"></i> Fleet Manager
+                    </h4>
+                    <small class="text-white-50 d-block mt-1" style="font-size: 0.75rem;">Admin Portal</small>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('keyless.keyless_entry') }}">
+                            <i class="bi bi-key-fill"></i> Keyless Entry
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto pt-3 border-top">
+                        <a class="nav-link" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content" style="margin-left: 16.666667%;">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="mb-1">
+                            <i class="bi bi-speedometer2 me-2" style="color: #2c5282;"></i> Dashboard
+                        </h1>
+                        <p class="text-muted mb-0" style="font-size: 0.9375rem;">Fleet overview and system monitoring</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="pattern-badge abstract-factory">
+                            <i class="bi bi-boxes"></i> Abstract Factory
+                        </span>
+                        <span class="pattern-badge state">
+                            <i class="bi bi-diagram-3"></i> State Pattern
+                        </span>
+                        <span class="pattern-badge observer">
+                            <i class="bi bi-bell"></i> Observer Pattern
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card primary">
+                        <div class="stat-card-title">Total Fleet</div>
+                        <div class="stat-card-value" style="color: #2c5282;">{{ stats.total_cars }}</div>
+                        <small>Vehicles</small>
+                        <i class="bi bi-car-front stat-icon" style="color: #2c5282;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card success">
+                        <div class="stat-card-title">Available</div>
+                        <div class="stat-card-value" style="color: #10b981;">{{ stats.available_cars }}</div>
+                        <small>Ready to rent</small>
+                        <i class="bi bi-check-circle stat-icon" style="color: #10b981;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card warning">
+                        <div class="stat-card-title">Active Bookings</div>
+                        <div class="stat-card-value" style="color: #f59e0b;">{{ active_bookings|length }}</div>
+                        <small>In progress</small>
+                        <i class="bi bi-calendar-check stat-icon" style="color: #f59e0b;"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card danger">
+                        <div class="stat-card-title">In Service</div>
+                        <div class="stat-card-value" style="color: #ef4444;">{{ stats.in_service_cars }}</div>
+                        <small>Under maintenance</small>
+                        <i class="bi bi-tools stat-icon" style="color: #ef4444;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Fleet State Visualization (State Pattern) -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-diagram-3"></i> Fleet Status by State
+                            </h5>
+                            <span class="pattern-badge state">State Pattern</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="state-badge available">
+                                                    <i class="bi bi-check-circle"></i> Available
+                                                </span>
+                                                <h3 class="mt-2 mb-0">{{ stats.available_cars }}</h3>
+                                            </div>
+                                            <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="state-badge booked">
+                                                    <i class="bi bi-calendar-check"></i> Booked
+                                                </span>
+                                                <h3 class="mt-2 mb-0">{{ stats.booked_cars }}</h3>
+                                            </div>
+                                            <i class="bi bi-calendar-check-fill text-primary" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="state-badge in-service">
+                                                    <i class="bi bi-tools"></i> In Service
+                                                </span>
+                                                <h3 class="mt-2 mb-0">{{ stats.in_service_cars }}</h3>
+                                            </div>
+                                            <i class="bi bi-tools text-warning" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-orange bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="state-badge maintenance">
+                                                    <i class="bi bi-wrench"></i> Maintenance
+                                                </span>
+                                                <h3 class="mt-2 mb-0">{{ stats.maintenance_cars }}</h3>
+                                            </div>
+                                            <i class="bi bi-wrench text-orange" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-danger bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="state-badge out-of-range">
+                                                    <i class="bi bi-exclamation-triangle"></i> Out of Range
+                                                </span>
+                                                <h3 class="mt-2 mb-0">{{ stats.out_of_range_cars }}</h3>
+                                            </div>
+                                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="mb-2"><i class="bi bi-info-circle text-primary"></i> State Pattern Implementation</h6>
+                                <p class="small mb-0">
+                                    Each car state (Available, Booked, In Service, Maintenance, Out of Range) encapsulates state-specific 
+                                    behavior and defines valid state transitions. This pattern eliminates complex conditional logic.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observer Pattern - Alerts Panel -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bell"></i> System Alerts
+                            </h5>
+                            <span class="pattern-badge observer">Observer Pattern</span>
+                        </div>
+                        <div class="card-body alert-panel p-0">
+                            <div class="p-3">
+                                <div class="alert-item info">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><i class="bi bi-info-circle"></i> System Ready</strong>
+                                        <span class="alert-time">Just now</span>
+                                    </div>
+                                    <small>All observers active and monitoring</small>
+                                </div>
+
+                                {% if stats.out_of_range_cars > 0 %}
+                                <div class="alert-item danger">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><i class="bi bi-exclamation-triangle"></i> Geofence Alert</strong>
+                                        <span class="alert-time">Recent</span>
+                                    </div>
+                                    <small>{{ stats.out_of_range_cars }} vehicle(s) detected outside allowed zone</small>
+                                </div>
+                                {% endif %}
+
+                                {% if active_bookings %}
+                                <div class="alert-item success">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><i class="bi bi-calendar-check"></i> Active Rentals</strong>
+                                        <span class="alert-time">Ongoing</span>
+                                    </div>
+                                    <small>{{ active_bookings|length }} booking(s) currently active</small>
+                                </div>
+                                {% endif %}
+
+                                {% if stats.maintenance_cars > 0 %}
+                                <div class="alert-item warning">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><i class="bi bi-wrench"></i> Maintenance Due</strong>
+                                        <span class="alert-time">Scheduled</span>
+                                    </div>
+                                    <small>{{ stats.maintenance_cars }} vehicle(s) require maintenance</small>
+                                </div>
+                                {% endif %}
+
+                                <div class="alert-item info">
+                                    <div class="d-flex justify-content-between">
+                                        <strong><i class="bi bi-graph-up"></i> Fleet Status</strong>
+                                        <span class="alert-time">Live</span>
+                                    </div>
+                                    <small>{{ ((stats.available_cars / stats.total_cars) * 100)|round|int }}% fleet availability</small>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-light border-top">
+                                <h6 class="mb-2"><i class="bi bi-info-circle text-info"></i> Observer Pattern</h6>
+                                <p class="small mb-0">
+                                    AdminNotifier and AlertLogger observers automatically receive and process system events 
+                                    (bookings, tracking, claims) without tight coupling.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Bookings Table -->
+            {% if active_bookings %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-check"></i> Active Bookings
+                                <span class="badge bg-light text-primary ms-2">{{ active_bookings|length }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Customer</th>
+                                            <th>Vehicle</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Amount</th>
+                                            <th>State</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for booking in active_bookings[:5] %}
+                                        <tr>
+                                            <td><strong>#{{ booking.id }}</strong></td>
+                                            <td>{{ booking.customer_name }}</td>
+                                            <td>
+                                                <i class="bi bi-car-front text-primary"></i>
+                                                {{ booking.car.model }}
+                                            </td>
+                                            <td>{{ booking.start_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ booking.end_date.strftime('%Y-%m-%d') }}</td>
+                                            <td><strong>Rs. {{ '{:,.0f}'.format(booking.total_amount) }}</strong></td>
+                                            <td>
+                                                <span class="state-badge booked">
+                                                    <i class="bi bi-circle-fill"></i> {{ booking.car.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Design Patterns Info -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-code-square"></i> GOF Design Patterns Implemented
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge abstract-factory mb-2">Abstract Factory</span>
+                                        <p class="small mb-0 mt-2">Creates vehicle families (Economy, Luxury, SUV) with related components</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge state mb-2">State Pattern</span>
+                                        <p class="small mb-0 mt-2">Manages car lifecycle states with controlled transitions</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge observer mb-2">Observer Pattern</span>
+                                        <p class="small mb-0 mt-2">Event notification system for system-wide alerts</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge chain mb-2">Chain of Responsibility</span>
+                                        <p class="small mb-0 mt-2">Damage claim processing through handler chain</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge proxy mb-2">Proxy Pattern</span>
+                                        <p class="small mb-0 mt-2">Access control and authentication layer</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <span class="pattern-badge repository mb-2">Repository Pattern</span>
+                                        <p class="small mb-0 mt-2">Data access abstraction layer</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

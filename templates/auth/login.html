@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Car Rental & Fleet Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c5282;
+            --primary-dark: #1e3a5f;
+            --primary-soft: #e8f2ff;
+            --bg-light: #f9fafb;
+            --text-dark: #1e293b;
+            --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.10);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .login-container {
+            max-width: 440px;
+            margin: 0 auto;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+        
+        .login-header i.main-icon {
+            font-size: 3rem;
+            opacity: 0.95;
+        }
+        
+        .login-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .login-header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .login-body {
+            padding: 2.5rem 2rem;
+        }
+        
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-label i {
+            color: var(--primary-color);
+            margin-right: 0.25rem;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            font-size: 0.9375rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.1);
+            background-color: #f0f9ff;
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none;
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-soft);
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(44, 82, 130, 0.25);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .login-footer small {
+            color: #64748b;
+            font-size: 0.8125rem;
+        }
+        
+        .login-footer i {
+            color: var(--primary-color);
+        }
+        
+        /* Flash Message Styling */
+        .alert {
+            border-radius: 8px;
+            border: 1px solid;
+            border-left-width: 3px;
+            font-size: 0.9375rem;
+        }
+        
+        .alert-danger {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+        
+        .alert-success {
+            background-color: #d1fae5;
+            border-color: #86efac;
+            border-left-color: #10b981;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999; max-width: 400px;">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-{{ 'exclamation-triangle-fill' if category == 'error' else 'check-circle-fill' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <div class="login-container">
+            <div class="card login-card">
+                <div class="login-header">
+                    <i class="bi bi-car-front-fill main-icon"></i>
+                    <h2>Car Rental & Fleet Management</h2>
+                    <p>Administrator Portal</p>
+                </div>
+                <div class="login-body">
+                    <form method="POST" action="{{ url_for('login.login') }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="bi bi-person-fill"></i> Username
+                            </label>
+                            <input type="text" class="form-control" 
+                                   id="username" name="username" 
+                                   placeholder="Enter your username"
+                                   required autofocus>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-lock-fill"></i> Password
+                            </label>
+                            <input type="password" class="form-control" 
+                                   id="password" name="password"
+                                   placeholder="Enter your password" 
+                                   required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-login">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                            </button>
+                        </div>
+                    </form>
+                    <div class="login-footer">
+                        <small>
+                            <i class="bi bi-shield-lock-fill"></i> 
+                            Secure Admin Access Only
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

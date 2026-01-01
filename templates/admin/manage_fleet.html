@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Fleet Management - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Fleet Management</h1>
+                <a href="{{ url_for('add_car.add_car') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Car
+                </a>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="text-muted">Total</h6>
+                            <h3>{{ stats.total }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">Available</h6>
+                            <h3>{{ stats.available }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h6 class="text-warning">Booked</h6>
+                            <h3>{{ stats.booked }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-info">
+                        <div class="card-body">
+                            <h6 class="text-info">In Service</h6>
+                            <h3>{{ stats.in_service }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-secondary">
+                        <div class="card-body">
+                            <h6 class="text-secondary">Maintenance</h6>
+                            <h3>{{ stats.maintenance }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-danger">
+                        <div class="card-body">
+                            <h6 class="text-danger">Out of Range</h6>
+                            <h3>{{ stats.out_of_range }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fleet Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Vehicles</h5>
+                </div>
+                <div class="card-body">
+                    {% if cars %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>License Plate</th>
+                                    <th>Model</th>
+                                    <th>Category</th>
+                                    <th>Tracker</th>
+                                    <th>Price/Day</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for car in cars %}
+                                <tr>
+                                    <td>{{ car.id }}</td>
+                                    <td><strong>{{ car.license_plate }}</strong></td>
+                                    <td>{{ car.model }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if car.category == 'economy' else 'primary' if car.category == 'luxury' else 'info' }}">
+                                            {{ car.category|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="bi bi-broadcast"></i> {{ car.tracker_type or 'BasicGPS' }}
+                                        </small>
+                                    </td>
+                                    <td>${{ car.price_tier }}</td>
+                                    <td>
+                                        {% if car.status == 'available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% elif car.status == 'booked' %}
+                                            <span class="badge bg-warning">Booked</span>
+                                        {% elif car.status == 'in_service' %}
+                                            <span class="badge bg-info">In Service</span>
+                                        {% elif car.status == 'maintenance' %}
+                                            <span class="badge bg-secondary">Maintenance</span>
+                                        {% elif car.status == 'out_of_range' %}
+                                            <span class="badge bg-danger">Out of Range</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                                Change Status
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ car.id }}, 'available')">Available</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ car.id }}, 'booked')">Booked</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ car.id }}, 'in_service')">In Service</a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus({{ car.id }}, 'maintenance')">Maintenance</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No cars in the fleet yet. 
+                        <a href="{{ url_for('add_car.add_car') }}">Add your first car</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function updateStatus(carId, newStatus) {
+    fetch(`/admin/fleet/update-status/${carId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `status=${newStatus}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

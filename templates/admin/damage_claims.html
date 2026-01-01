@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Damage Claims - Car Rental System{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/damage_claims.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-exclamation-triangle-fill"></i> Damage Claims</h1>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#fileClaimModal">
+                    <i class="bi bi-plus-circle"></i> File New Claim
+                </button>
+            </div>
+
+            <!-- Pending Claims Alert -->
+            {% if pending %}
+            <div class="alert alert-warning">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-circle"></i> Pending Claims</h5>
+                <p>You have {{ pending|length }} claim(s) pending review.</p>
+            </div>
+            {% endif %}
+
+            <!-- Claims Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Total Claims</h6>
+                            <h3>{{ claims|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <h6 class="text-warning">Pending</h6>
+                            <h3>{{ pending|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h6 class="text-success">Approved</h6>
+                            <h3>{{ claims|selectattr('status', 'equalto', 'approved')|list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-danger">
+                        <div class="card-body text-center">
+                            <h6 class="text-danger">Insurance</h6>
+                            <h3>{{ claims|selectattr('status', 'equalto', 'insurance_claim')|list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Claims Table -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">All Claims</h5>
+                </div>
+                <div class="card-body">
+                    {% if claims %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Car ID</th>
+                                    <th>Damage Type</th>
+                                    <th>Description</th>
+                                    <th>Estimated Cost</th>
+                                    <th>Status</th>
+                                    <th>Handler</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for claim in claims %}
+                                <tr>
+                                    <td>{{ claim.id }}</td>
+                                    <td><strong>{{ claim.car_id }}</strong></td>
+                                    <td>{{ claim.damage_type|replace('_', ' ')|title }}</td>
+                                    <td>{{ claim.description[:50] }}...</td>
+                                    <td>${{ claim.estimated_cost or 0 }}</td>
+                                    <td>
+                                        {% if claim.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif claim.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif claim.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif claim.status == 'insurance_claim' %}
+                                            <span class="badge bg-danger">Insurance</span>
+                                        {% elif claim.status == 'pending_approval' %}
+                                            <span class="badge bg-info">Needs Approval</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ claim.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if claim.handler %}
+                                            <small class="text-muted">{{ claim.handler|replace('Handler', '') }}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if claim.status == 'pending_approval' %}
+                                        <div class="btn-group btn-group-sm">
+                                            <form method="POST" action="{{ url_for('damage_claims.approve_claim', claim_id=claim.id) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('damage_claims.reject_claim', claim_id=claim.id) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No damage claims filed yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Chain of Responsibility Info -->
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Chain of Responsibility Pattern</h5>
+                    <span class="pattern-badge chain">CoR Pattern</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Claims are processed through a chain of handlers based on estimated cost:</p>
+                    
+                    <div class="cor-flow">
+                        <div class="cor-handler minor">
+                            <i class="bi bi-1-circle-fill" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Minor Damage Handler</h6>
+                            <div class="cor-threshold">Cost &lt; Rs. 10,000</div>
+                            <div class="mt-2">
+                                <span class="badge bg-success">Auto-approved</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cor-arrow">
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                        
+                        <div class="cor-handler major">
+                            <i class="bi bi-2-circle-fill" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Major Damage Handler</h6>
+                            <div class="cor-threshold">Rs. 10,000 - 50,000</div>
+                            <div class="mt-2">
+                                <span class="badge bg-warning">Requires Approval</span>
+                            </div>
+                        </div>
+                        
+                        <div class="cor-arrow">
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                        
+                        <div class="cor-handler insurance">
+                            <i class="bi bi-3-circle-fill" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">Insurance Handler</h6>
+                            <div class="cor-threshold">≥ Rs. 50,000</div>
+                            <div class="mt-2">
+                                <span class="badge bg-danger">Insurance Claim</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bi bi-info-circle text-danger"></i> Pattern Implementation</h6>
+                        <p class="small mb-0">
+                            Each handler in the chain decides whether to process the request or pass it to the next handler.
+                            This decouples the sender from the receiver and allows dynamic chain configuration.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- File Claim Modal -->
+<div class="modal fade" id="fileClaimModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">File New Damage Claim</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('damage_claims.file_claim') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="car_id" class="form-label">Select Car *</label>
+                        <select class="form-select" id="car_id" name="car_id" required>
+                            <option value="">Choose a car...</option>
+                            {% for car in cars %}
+                            <option value="{{ car.id }}">{{ car.model }} ({{ car.license_plate }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="booking_id" class="form-label">Booking ID (Optional)</label>
+                        <input type="number" class="form-control" id="booking_id" name="booking_id">
+                    </div>
+                    <div class="mb-3">
+                        <label for="damage_type" class="form-label">Damage Type *</label>
+                        <select class="form-select" id="damage_type" name="damage_type" required>
+                            <option value="minor">Minor Damage</option>
+                            <option value="major">Major Damage</option>
+                            <option value="severe">Severe Damage</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estimated_cost" class="form-label">Estimated Cost ($) *</label>
+                        <input type="number" step="0.01" class="form-control" id="estimated_cost" name="estimated_cost" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">File Claim</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

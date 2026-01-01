@@ -1,0 +1,513 @@
+{% extends 'base_enhanced.html' %}
+
+{% block title %}Keyless Entry System - Car Rental{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('keyless.keyless_entry') }}">
+                            <i class="bi bi-key-fill"></i> Keyless Entry
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-key-fill"></i> Keyless Entry System</h1>
+                <span class="pattern-badge proxy">
+                    <i class="bi bi-shield-lock-fill"></i> Proxy Pattern
+                </span>
+            </div>
+
+            <!-- Proxy Pattern Info -->
+            <div class="alert alert-info mb-4">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Proxy Pattern: Automated Keyless Access</h6>
+                        <small>This keyless entry system uses the <strong>Proxy Pattern</strong> to control access to car operations. 
+                        When you enter a valid booking code, the system automatically:
+                        <br>
+                        <strong>Step 1:</strong> Verifies access code through AccessProxy
+                        <br>
+                        <strong>Step 2:</strong> Unlocks vehicle (Keyless Entry)
+                        <br>
+                        <strong>Step 3:</strong> Starts engine (Push-button Start)
+                        <br>
+                        <strong>✅ Ready to Drive!</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Access Code Input -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-shield-check"></i> Enter Access Code</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="accessCode" class="form-label">Booking Access Code</label>
+                                <input type="text" class="form-control form-control-lg" id="accessCode" 
+                                       placeholder="e.g., RENT123456" maxlength="12">
+                                <small class="text-muted">🚗 Enter code to automatically unlock and start your vehicle</small>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-lg w-100" onclick="verifyAccess()">
+                                <i class="bi bi-check-circle-fill"></i> Start Car Access Process
+                            </button>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> Process: Verify → Unlock → Start Engine
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Bookings Reference -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h6 class="mb-0"><i class="bi bi-list-check"></i> Active Bookings (Test Codes)</h6>
+                        </div>
+                        <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                            {% if bookings %}
+                                <div class="list-group">
+                                    {% for booking in bookings %}
+                                    <div class="list-group-item list-group-item-action" onclick="useAccessCode('{{ booking.access_code }}')">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ booking.car.license_plate }}</h6>
+                                            <small class="text-muted">
+                                                {{ booking.car.category|title }}
+                                                {% if booking.car.status == 'out_of_range' %}
+                                                    <span class="badge bg-danger">Out of Range</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1"><strong>{{ booking.car.model }}</strong></p>
+                                        <small>Code: <span class="badge bg-primary">{{ booking.access_code }}</span></small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">No active bookings. Create a booking first.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car Control Panel -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm" id="controlPanel" style="display: none;">
+                        <div class="card-header bg-success text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="bi bi-car-front-fill"></i> Vehicle Control Panel</h5>
+                                <button class="btn btn-sm btn-light" onclick="resetCarLocation()" title="Reset car location if out of range">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <h4 id="carModel" class="mb-1">-</h4>
+                                <p id="licensePlate" class="text-muted mb-0">-</p>
+                                <p class="mb-0"><small>Customer: <span id="customerName">-</span></small></p>
+                            </div>
+
+                            <hr>
+
+                            <!-- Car Status -->
+                            <div class="mb-4 text-center">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded">
+                                            <i class="bi bi-lock-fill" id="lockIcon" style="font-size: 2rem;"></i>
+                                            <p class="mb-0 mt-2" id="lockStatus"><strong>Locked</strong></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded">
+                                            <i class="bi bi-power" id="engineIcon" style="font-size: 2rem;"></i>
+                                            <p class="mb-0 mt-2" id="engineStatus"><strong>Engine Off</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Control Buttons -->
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-success btn-lg" onclick="unlockCar()">
+                                    <i class="bi bi-unlock-fill"></i> Unlock (Keyless)
+                                </button>
+                                <button type="button" class="btn btn-warning btn-lg" onclick="lockCar()">
+                                    <i class="bi bi-lock-fill"></i> Lock
+                                </button>
+                                <button type="button" class="btn btn-primary btn-lg" onclick="startEngine()">
+                                    <i class="bi bi-lightning-charge-fill"></i> Start Engine (Push-button)
+                                </button>
+                                <button type="button" class="btn btn-info btn-lg" onclick="getStatus()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                                </button>
+                            </div>
+
+                            <div class="mt-3" id="operationResult"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+let currentCarId = null;
+let currentAccessCode = null;
+let autoStartProcess = false;
+
+function useAccessCode(code) {
+    document.getElementById('accessCode').value = code;
+    verifyAccess();
+}
+
+async function verifyAccess() {
+    const accessCode = document.getElementById('accessCode').value.trim();
+    
+    if (!accessCode) {
+        showNotification('warning', 'Please enter an access code');
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/keyless/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ access_code: accessCode })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            currentCarId = data.car_id;
+            currentAccessCode = data.access_code;
+            
+            document.getElementById('carModel').textContent = data.car_model;
+            document.getElementById('licensePlate').textContent = data.license_plate;
+            document.getElementById('customerName').textContent = data.customer_name;
+            document.getElementById('controlPanel').style.display = 'block';
+            
+            showNotification('success', `✅ Access granted! Starting car access process for ${data.car_model}...`);
+            
+            // Automatically start the car access process
+            await startCarAccessProcess();
+        } else {
+            showNotification('danger', '❌ Invalid access code. Access denied.');
+            document.getElementById('controlPanel').style.display = 'none';
+        }
+    } catch (error) {
+        showNotification('danger', 'Error verifying access code');
+    }
+}
+
+async function startCarAccessProcess() {
+    showNotification('info', '🔓 Step 1/2: Unlocking vehicle...');
+    
+    // Step 1: Unlock the car
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const unlockResult = await unlockCarAuto();
+    
+    if (unlockResult) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        showNotification('info', '🚗 Step 2/2: Starting engine...');
+        
+        // Step 2: Start the engine
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await startEngineAuto();
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        showNotification('success', '✅ Car access complete! Vehicle is ready to drive.');
+    }
+}
+
+async function unlockCarAuto() {
+    if (!currentCarId || !currentAccessCode) return false;
+
+    try {
+        const response = await fetch('/admin/keyless/unlock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            updateLockStatus(true);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function startEngineAuto() {
+    if (!currentCarId || !currentAccessCode) return false;
+
+    try {
+        const response = await fetch('/admin/keyless/start-engine', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            updateEngineStatus(true);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function unlockCar() {
+    if (!currentCarId || !currentAccessCode) return;
+
+    try {
+        const response = await fetch('/admin/keyless/unlock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        showOperationResult(data);
+        
+        if (data.success) {
+            updateLockStatus(true);
+            showNotification('success', '🔓 Car unlocked successfully! (Keyless Entry)');
+        }
+    } catch (error) {
+        showNotification('danger', 'Error unlocking car');
+    }
+}
+
+async function lockCar() {
+    if (!currentCarId || !currentAccessCode) return;
+
+    try {
+        const response = await fetch('/admin/keyless/lock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        showOperationResult(data);
+        
+        if (data.success) {
+            updateLockStatus(false);
+            updateEngineStatus(false);
+            showNotification('success', '🔒 Car locked successfully! Engine stopped.');
+        }
+    } catch (error) {
+        showNotification('danger', 'Error locking car');
+    }
+}
+
+async function startEngine() {
+    if (!currentCarId || !currentAccessCode) return;
+
+    try {
+        const response = await fetch('/admin/keyless/start-engine', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        showOperationResult(data);
+        
+        if (data.success) {
+            updateEngineStatus(true);
+            showNotification('success', '🚗 Engine started! (Push-button start)');
+        } else {
+            showNotification('danger', data.message || 'Failed to start engine');
+        }
+    } catch (error) {
+        showNotification('danger', 'Error starting engine');
+    }
+}
+
+async function getStatus() {
+    if (!currentCarId || !currentAccessCode) return;
+
+    try {
+        const response = await fetch('/admin/keyless/status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                car_id: currentCarId,
+                access_code: currentAccessCode 
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            updateLockStatus(data.is_unlocked);
+            updateEngineStatus(data.engine_running);
+            showNotification('info', '🔄 Status refreshed successfully');
+        }
+    } catch (error) {
+        console.error('Error getting status');
+    }
+}
+
+function updateLockStatus(isUnlocked) {
+    const lockIcon = document.getElementById('lockIcon');
+    const lockStatus = document.getElementById('lockStatus');
+    
+    if (isUnlocked) {
+        lockIcon.className = 'bi bi-unlock-fill text-success';
+        lockStatus.innerHTML = '<strong class="text-success">Unlocked</strong>';
+    } else {
+        lockIcon.className = 'bi bi-lock-fill text-danger';
+        lockStatus.innerHTML = '<strong class="text-danger">Locked</strong>';
+    }
+}
+
+function updateEngineStatus(isRunning) {
+    const engineIcon = document.getElementById('engineIcon');
+    const engineStatus = document.getElementById('engineStatus');
+    
+    if (isRunning) {
+        engineIcon.className = 'bi bi-lightning-charge-fill text-primary';
+        engineStatus.innerHTML = '<strong class="text-primary">Engine Running</strong>';
+    } else {
+        engineIcon.className = 'bi bi-power text-secondary';
+        engineStatus.innerHTML = '<strong class="text-secondary">Engine Off</strong>';
+    }
+}
+
+function showOperationResult(data) {
+    const resultDiv = document.getElementById('operationResult');
+    const alertClass = data.success ? 'alert-success' : 'alert-danger';
+    
+    resultDiv.innerHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="bi bi-${data.success ? 'check-circle' : 'x-circle'}-fill"></i> ${data.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+}
+
+async function resetCarLocation() {
+    if (!currentCarId) {
+        showNotification('warning', 'No car selected');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/keyless/reset-location/${currentCarId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', '🔄 ' + data.message + '. You can now access the car.');
+            // Refresh status
+            setTimeout(() => getStatus(), 1000);
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Error resetting car location');
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,433 @@
+/**
+ * Add Car Page Styles
+ * 
+ * Purpose: Form for adding new vehicles to the fleet
+ * Features:
+ * - Clean form layout with validation
+ * - Category selection with visual feedback
+ * - Abstract Factory pattern explanation
+ * - Responsive form design
+ * - Real-time field validation styling
+ */
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+
+.add-car-page {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.add-car-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   FORM CARD
+   ============================================ */
+
+.form-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: var(--spacing-xl);
+    transition: all var(--transition-base);
+}
+
+.form-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.form-card-header {
+    background: linear-gradient(135deg, #5a7fff 0%, #7c95ff 100%);
+    color: var(--text-light);
+    padding: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.form-card-header i {
+    font-size: 2rem;
+}
+
+.form-card-header h2 {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-light);
+}
+
+.form-card-body {
+    padding: var(--spacing-2xl);
+}
+
+/* ============================================
+   FORM GROUPS
+   ============================================ */
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.form-label.required::after {
+    content: " *";
+    color: var(--color-danger);
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+
+.form-control,
+.form-select {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background-color: var(--color-white);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-base);
+}
+
+.form-control:hover,
+.form-select:hover {
+    border-color: var(--color-gray-400);
+}
+
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(90, 127, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Textarea specific */
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ============================================
+   CATEGORY SELECT - SPECIAL STYLING
+   ============================================ */
+
+.category-select-group {
+    position: relative;
+}
+
+.category-select-group .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7fff' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    padding-right: var(--spacing-2xl);
+}
+
+.category-badge-preview {
+    display: inline-block;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    transition: all var(--transition-fast);
+}
+
+.category-badge-preview.economy {
+    background-color: var(--color-success);
+    color: var(--text-light);
+}
+
+.category-badge-preview.luxury {
+    background-color: var(--color-warning);
+    color: var(--text-primary);
+}
+
+.category-badge-preview.suv {
+    background-color: var(--color-info);
+    color: var(--text-light);
+}
+
+/* ============================================
+   INPUT GROUPS (Icons/Prefixes)
+   ============================================ */
+
+.input-group {
+    display: flex;
+    width: 100%;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--color-gray-100);
+    border: 2px solid var(--border-color);
+    border-right: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+.input-group .form-control {
+    border-left: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.input-group .form-control:focus ~ .input-group-text,
+.input-group .form-control:focus + .input-group-text {
+    border-color: var(--color-primary);
+}
+
+/* ============================================
+   FORM ACTIONS/BUTTONS
+   ============================================ */
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--border-color-light);
+    margin-top: var(--spacing-xl);
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #5a7fff 0%, #7c95ff 100%);
+    color: var(--text-light);
+    padding: var(--spacing-md) var(--spacing-2xl);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 12px rgba(90, 127, 255, 0.3);
+}
+
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(90, 127, 255, 0.5);
+}
+
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    background-color: var(--color-secondary);
+    color: var(--text-light);
+    padding: var(--spacing-md) var(--spacing-2xl);
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-cancel:hover {
+    background-color: var(--color-secondary-dark);
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   PATTERN EXPLANATION SECTION
+   ============================================ */
+
+.pattern-explanation {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin-top: var(--spacing-2xl);
+}
+
+.pattern-explanation h5 {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.pattern-explanation h5 i {
+    font-size: var(--font-size-xl);
+}
+
+.pattern-explanation p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.7;
+}
+
+.pattern-explanation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pattern-explanation li {
+    padding: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.pattern-explanation li::before {
+    content: "✓";
+    color: var(--color-success);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+}
+
+.pattern-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info-light) 100%);
+    color: var(--text-light);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ============================================
+   VALIDATION STATES
+   ============================================ */
+
+.form-control.is-valid {
+    border-color: var(--color-success);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2328a745' viewBox='0 0 16 16'%3E%3Cpath d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    padding-right: var(--spacing-2xl);
+}
+
+.form-control.is-invalid {
+    border-color: var(--color-danger);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23dc3545' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    padding-right: var(--spacing-2xl);
+}
+
+.valid-feedback {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-success);
+}
+
+.invalid-feedback {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-danger);
+}
+
+/* ============================================
+   HELP TEXT
+   ============================================ */
+
+.form-text {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .form-card-body {
+        padding: var(--spacing-xl);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-card-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .form-card-header h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .form-card-body {
+        padding: var(--spacing-lg);
+    }
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.btn-submit.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn-submit.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--text-light);
+    animation: spin 0.8s linear infinite;
+}
+

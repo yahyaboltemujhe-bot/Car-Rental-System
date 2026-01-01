@@ -1,0 +1,243 @@
+{% extends 'base_enhanced.html' %}
+
+{% block title %}Vehicle Tracking - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-geo-alt-fill"></i> Vehicle Tracking</h1>
+                <span class="pattern-badge observer">
+                    <i class="bi bi-bell-fill"></i> Observer Pattern
+                </span>
+            </div>
+
+            <!-- Observer Pattern Info -->
+            <div class="alert alert-info mb-3">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill me-2 mt-1" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">Observer Pattern Active</h6>
+                        <small>Real-time notifications will appear when a car goes out of range. Click "Test Alert" to see the notification system in action.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Out of Range Alert -->
+            {% if out_of_range %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Alert: Vehicles Out of Range!</h5>
+                <p>{{ out_of_range|length }} vehicle(s) are currently outside the allowed zone.</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Tracking Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                            <h6 class="text-muted mt-2">In Range</h6>
+                            <h3>{{ cars|length - out_of_range|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-danger">
+                        <div class="card-body text-center">
+                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 2rem;"></i>
+                            <h6 class="text-muted mt-2">Out of Range</h6>
+                            <h3>{{ out_of_range|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <i class="bi bi-car-front-fill text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="text-muted mt-2">Total Tracked</h6>
+                            <h3>{{ cars|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicles List -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">All Vehicles Location Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if cars %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>License Plate</th>
+                                    <th>Model</th>
+                                    <th>Tracker</th>
+                                    <th>Status</th>
+                                    <th>Current Location</th>
+                                    <th>Rental Location</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for car in cars %}
+                                <tr class="{{ 'table-danger' if car.status == 'out_of_range' else '' }}">
+                                    <td><strong>{{ car.license_plate }}</strong></td>
+                                    <td>{{ car.model }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-geo-alt-fill"></i> {{ car.tracker_type or 'BasicGPS' }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">{{ (car.tracker_update_interval or 300) // 60 }} min update</small>
+                                    </td>
+                                    <td>
+                                        {% if car.status == 'out_of_range' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> Out of Range
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-{{ 'success' if car.status == 'available' else 'warning' if car.status == 'booked' else 'info' }}">
+                                                {{ car.status|replace('_', ' ')|title }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if car.current_location_lat and car.current_location_lng %}
+                                            <small>{{ "%.4f"|format(car.current_location_lat) }}, {{ "%.4f"|format(car.current_location_lng) }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Not tracked</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if car.rental_location_lat and car.rental_location_lng %}
+                                            <small>{{ "%.4f"|format(car.rental_location_lat) }}, {{ "%.4f"|format(car.rental_location_lng) }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Not set</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary me-1" onclick="simulateLocation({{ car.id }})">
+                                            <i class="bi bi-geo-fill"></i> Simulate
+                                        </button>
+                                        <a href="{{ url_for('tracking.simulate_out_of_range', car_id=car.id) }}" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-exclamation-triangle"></i> Test Alert
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No vehicles to track. 
+                        <a href="{{ url_for('add_car.add_car') }}">Add a vehicle</a> to start tracking.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Observer Pattern Info -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-bell-fill"></i> Observer Pattern - Real-time Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <p>This tracking system uses the <strong>Observer Pattern</strong> to notify administrators when vehicles go out of range:</p>
+                    <ul>
+                        <li><strong>Subject:</strong> Tracking Service monitors vehicle locations</li>
+                        <li><strong>Observers:</strong> Admin Notifier + Alert Logger receive notifications</li>
+                        <li><strong>Trigger:</strong> When distance exceeds 50km from rental location</li>
+                        <li><strong>Action:</strong> Automatic alerts sent and logged</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function simulateLocation(carId) {
+    // Simulate a random location near Karachi (24.8607° N, 67.0011° E)
+    const baseLat = 24.8607;
+    const baseLng = 67.0011;
+    
+    // Random offset (can be within or outside 50km range)
+    const randomLat = baseLat + (Math.random() - 0.5) * 1;  // ±0.5 degrees
+    const randomLng = baseLng + (Math.random() - 0.5) * 1;
+    
+    fetch(`/admin/tracking/update-location/${carId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            latitude: randomLat,
+            longitude: randomLng
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Location updated! ${data.is_out_of_range ? 'Vehicle is OUT OF RANGE!' : 'Vehicle is within range.'}`);
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

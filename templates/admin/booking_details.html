@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-left: 16.666667%;">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-file-text-fill"></i> Booking Details #{{ booking.id }}</h1>
+                <a href="{{ url_for('bookings.list_bookings') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Booking Information -->
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Booking Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+                            <p><strong>Access Code:</strong> <code>{{ booking.access_code }}</code></p>
+                            <p><strong>Status:</strong> 
+                                {% if booking.status == 'active' %}
+                                    <span class="badge bg-primary">Active</span>
+                                {% elif booking.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Created:</strong> {{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Customer Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Name:</strong> {{ booking.customer_name }}</p>
+                            <p><strong>Phone:</strong> {{ booking.customer_phone }}</p>
+                            <p><strong>CNIC:</strong> {{ booking.customer_cnic }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Car & Payment Information -->
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Vehicle Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Model:</strong> {{ booking.car.model }}</p>
+                            <p><strong>License Plate:</strong> {{ booking.car.license_plate }}</p>
+                            <p><strong>Category:</strong> 
+                                <span class="badge bg-secondary">{{ booking.car.category|upper }}</span>
+                            </p>
+                            <p><strong>Current Status:</strong> 
+                                <span class="badge bg-warning">{{ booking.car.status|upper }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Rental Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Start Date:</strong> {{ booking.start_date.strftime('%Y-%m-%d') }}</p>
+                            <p><strong>End Date:</strong> {{ booking.end_date.strftime('%Y-%m-%d') }}</p>
+                            <p><strong>Duration:</strong> {{ (booking.end_date - booking.start_date).days }} days</p>
+                            <p><strong>Total Amount:</strong> 
+                                <span class="h4 text-success">Rs. {{ '{:,.0f}'.format(booking.total_amount) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            {% if booking.status == 'active' %}
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('bookings.complete_booking', booking_id=booking.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Mark as Completed
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('bookings.cancel_booking', booking_id=booking.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                            <i class="bi bi-x-circle"></i> Cancel Booking
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/bookings.css') }}">
+{% endblock %}

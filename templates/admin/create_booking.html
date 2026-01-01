@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Booking - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar" style="position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;">
+            <div class="position-sticky pt-3">
+                <div class="px-3 py-3 mb-3 border-bottom">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-car-front-fill"></i> Car Rental
+                    </h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-left: 16.666667%;">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="bi bi-plus-circle-fill"></i> Create New Booking</h1>
+                <a href="{{ url_for('bookings.list_bookings') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Bookings
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Booking Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="bookingForm">
+                        <div class="row">
+                            <!-- Car Selection -->
+                            <div class="col-md-12 mb-3">
+                                <label for="car_id" class="form-label">Select Car *</label>
+                                <select class="form-select" id="car_id" name="car_id" required>
+                                    <option value="">Choose a car...</option>
+                                    {% for car in cars %}
+                                    <option value="{{ car.id }}" data-price="{{ car.price_tier }}">
+                                        {{ car.model }} ({{ car.license_plate }}) - Rs. {{ '{:,.0f}'.format(car.price_tier) }}/day
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Customer Name -->
+                            <div class="col-md-6 mb-3">
+                                <label for="customer_name" class="form-label">Customer Name *</label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                       placeholder="Enter customer name" required>
+                            </div>
+
+                            <!-- Customer Phone -->
+                            <div class="col-md-6 mb-3">
+                                <label for="customer_phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
+                                       placeholder="03XX-XXXXXXX" pattern="03[0-9]{2}-[0-9]{7}" required>
+                                <small class="text-muted">Format: 03XX-XXXXXXX</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Customer CNIC -->
+                            <div class="col-md-12 mb-3">
+                                <label for="customer_cnic" class="form-label">CNIC Number *</label>
+                                <input type="text" class="form-control" id="customer_cnic" name="customer_cnic" 
+                                       placeholder="12345-1234567-1" pattern="[0-9]{5}-[0-9]{7}-[0-9]{1}" required>
+                                <small class="text-muted">Format: 12345-1234567-1</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Start Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       min="{{ today }}" required>
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       min="{{ today }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Price Calculation Display -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h5>Booking Summary</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Daily Rate:</strong> Rs. <span id="daily_rate">0</span></p>
+                                        <p><strong>Duration:</strong> <span id="duration">0</span> days</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Total Amount:</strong> Rs. <span id="total_amount">0</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Create Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pattern Explanation -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Design Patterns Used</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><strong>State Pattern:</strong> Car state changes from Available → Booked when booking created</li>
+                        <li><strong>Observer Pattern:</strong> Booking creation triggers notifications to admin observers</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const carSelect = document.getElementById('car_id');
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    // Set minimum dates to today
+    const today = new Date().toISOString().split('T')[0];
+    startDate.min = today;
+    endDate.min = today;
+    startDate.value = today;
+    
+    function calculateTotal() {
+        const selectedCar = carSelect.options[carSelect.selectedIndex];
+        const dailyRate = parseFloat(selectedCar.dataset.price) || 0;
+        
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+        
+        const total = dailyRate * days;
+        
+        document.getElementById('daily_rate').textContent = dailyRate.toLocaleString();
+        document.getElementById('duration').textContent = days;
+        document.getElementById('total_amount').textContent = total.toLocaleString();
+    }
+    
+    carSelect.addEventListener('change', calculateTotal);
+    startDate.addEventListener('change', function() {
+        endDate.min = startDate.value;
+        calculateTotal();
+    });
+    endDate.addEventListener('change', calculateTotal);
+});
+</script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/bookings.css') }}">
+{% endblock %}

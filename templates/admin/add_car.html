@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Car - Car Rental System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-dark sidebar vh-100">
+            <div class="position-sticky pt-3">
+                <h4 class="text-white px-3">Car Rental</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('manage_fleet.fleet') }}">
+                            <i class="bi bi-car-front"></i> Fleet Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active bg-primary" href="{{ url_for('add_car.add_car') }}">
+                            <i class="bi bi-plus-circle"></i> Add Car
+                        </a>
+                    </li>
+                    <li class="nav-item">                        <a class="nav-link text-white" href="{{ url_for('bookings.list_bookings') }}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">                        <a class="nav-link text-white" href="{{ url_for('tracking.tracking') }}">
+                            <i class="bi bi-geo-alt"></i> Tracking
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('damage_claims.claims') }}">
+                            <i class="bi bi-exclamation-triangle"></i> Damage Claims
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-white" href="{{ url_for('logout.logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Add New Car</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('add_car.add_car') }}">
+                                <div class="mb-3">
+                                    <label for="license_plate" class="form-label">License Plate *</label>
+                                    <input type="text" class="form-control" id="license_plate" name="license_plate" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model *</label>
+                                    <input type="text" class="form-control" id="model" name="model" placeholder="e.g., Toyota Corolla 2023" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category *</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select category...</option>
+                                        <option value="economy">Economy ($30/day)</option>
+                                        <option value="suv">SUV ($65/day)</option>
+                                        <option value="luxury">Luxury ($100/day)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="rental_lat" class="form-label">Rental Location Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="rental_lat" name="rental_lat" placeholder="e.g., 24.8607">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="rental_lng" class="form-label">Rental Location Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="rental_lng" name="rental_lng" placeholder="e.g., 67.0011">
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-plus-circle"></i> Add Car to Fleet
+                                    </button>
+                                    <a href="{{ url_for('manage_fleet.fleet') }}" class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Vehicle Categories</h5>
+                            <hr>
+                            <h6>Economy</h6>
+                            <ul class="small">
+                                <li>Manual transmission</li>
+                                <li>Basic features</li>
+                                <li>$30/day</li>
+                            </ul>
+                            
+                            <h6>SUV</h6>
+                            <ul class="small">
+                                <li>Spacious interior</li>
+                                <li>4WD capability</li>
+                                <li>$65/day</li>
+                            </ul>
+                            
+                            <h6>Luxury</h6>
+                            <ul class="small">
+                                <li>Premium features</li>
+                                <li>Advanced safety</li>
+                                <li>$100/day</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
