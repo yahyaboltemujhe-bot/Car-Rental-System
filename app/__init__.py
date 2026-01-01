@@ -141,7 +141,17 @@ def create_app():
     # Register API Blueprints
     from .api.v1.cars import api_cars_bp
     from .api.v1.bookings import api_bookings_bp
-    
+
+    # Register public-facing customer blueprints
+    try:
+        from .presentation.customer.browse_cars import customer_bp
+        from .presentation.customer.book_car import booking_bp
+        app.register_blueprint(customer_bp)
+        app.register_blueprint(booking_bp)
+        logger.info('Customer blueprints registered')
+    except Exception:
+        logger.warning('Customer blueprints missing or failed to register')
+
     app.register_blueprint(api_cars_bp)
     app.register_blueprint(api_bookings_bp)
     
