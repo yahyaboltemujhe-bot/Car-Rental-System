@@ -35,17 +35,19 @@ def create_app():
     def load_user(user_id):
         return Admin.query.get(int(user_id))
     
-    # Create tables
-    with app.app_context():
-        db.create_all()
-        
-        # Create default admin if not exists
-        if not Admin.query.filter_by(username='admin').first():
-            admin = Admin(username='admin', email='admin@carrental.com')
-            admin.set_password('admin')
-            db.session.add(admin)
-            db.session.commit()
-            print("Default admin created: username='admin', password='admin'")
+    # Create tables only in development or when explicitly requested
+    init_db_flag = os.environ.get('INIT_DB', 'false').lower() == 'true'
+    if app.config.get('DEBUG') or init_db_flag:
+        with app.app_context():
+            db.create_all()
+            
+            # Create default admin if not exists
+            if not Admin.query.filter_by(username='admin').first():
+                admin = Admin(username='admin', email='admin@carrental.com')
+                admin.set_password('admin')
+                db.session.add(admin)
+                db.session.commit()
+                print("Default admin created: username='admin', password='admin'")
 
     # Register Blueprints - Web UI (Admin Only)
     from .presentation.auth.login import login_bp
